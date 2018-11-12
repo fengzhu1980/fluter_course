@@ -1,6 +1,7 @@
 # flutter_course
 
 A new Flutter project.
+From teacher Max.
 
 ## Getting Started
 
