@@ -1,41 +1,39 @@
 import 'dart:async';
 
-import 'package:scoped_model/scoped_model.dart';
-
 import 'package:flutter/material.dart';
 import '../widgets/ui_elements/title_default.dart';
-import '../scoped-models/products.dart';
 import '../models/product.dart';
 
 class ProductPage extends StatelessWidget {
-  final int productIndex;
+  final Product product;
 
-  ProductPage(this.productIndex);
+  ProductPage(this.product);
 
   _showWarningDialog(BuildContext context) {
     showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Are you sure?'),
-            content: Text('This action cannot be undone!'),
-            actions: <Widget>[
-              FlatButton(
-                child: Text('DISCARD'),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              ),
-              FlatButton(
-                child: Text('CONTINUE'),
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pop(context, true);
-                },
-              ),
-            ],
-          );
-        });
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Are you sure?'),
+          content: Text('This action cannot be undone!'),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('DISCARD'),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            FlatButton(
+              child: Text('CONTINUE'),
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pop(context, true);
+              },
+            ),
+          ],
+        );
+      }
+    );
   }
 
   Widget _buildAddressPriceRow(double price) {
@@ -69,48 +67,46 @@ class ProductPage extends StatelessWidget {
         Navigator.pop(context, false);
         return Future.value(false);
       },
-      child: ScopedModelDescendant<ProductsModel>(
-        builder: (
-          BuildContext context,
-          Widget child,
-          ProductsModel model
-        ) {
-          final Product product = model.products[productIndex];
-          return Scaffold(
-          appBar: AppBar(
-            title: Text(product.title),
-          ),
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Image.asset(product.image),
-              // Title and price
-              Container(
-                padding: EdgeInsets.all(10.0),
-                child: TitleDefault(product.title),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(product.title),
+        ),
+        body: ListView(
+          // crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            FadeInImage(
+              image: NetworkImage(product.image),
+              height: 300.0,
+              fit: BoxFit.cover,
+              placeholder: AssetImage('assets/food.jpg'),
+            ),
+            // Image.network(product.image),
+            // Title and price
+            Container(
+              padding: EdgeInsets.all(10.0),
+              child: Center(child: TitleDefault(product.title)),
+            ),
+            _buildAddressPriceRow(product.price),
+            // Description
+            Container(
+              padding: EdgeInsets.all(10.0),
+              child: Text(
+                product.description,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontWeight: FontWeight.normal, fontFamily: 'Oswald'),
               ),
-              _buildAddressPriceRow(product.price),
-              // Description
-              Container(
-                padding: EdgeInsets.all(10.0),
-                child: Text(
-                  product.description,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontWeight: FontWeight.normal, fontFamily: 'Oswald'),
-                ),
+            ),
+            Container(
+              child: RaisedButton(
+                color: Theme.of(context).accentColor,
+                child: Text('DELETE'),
+                onPressed: () => _showWarningDialog(context),
               ),
-              Container(
-                child: RaisedButton(
-                  color: Theme.of(context).accentColor,
-                  child: Text('DELETE'),
-                  onPressed: () => _showWarningDialog(context),
-                ),
-              )
-            ],
-          ));
-        },
-      ), 
+            )
+          ],
+        )
+      ),
     );
   }
 }

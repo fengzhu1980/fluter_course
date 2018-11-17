@@ -4,7 +4,7 @@ import 'package:scoped_model/scoped_model.dart';
 
 import '../widgets/helpers/ensure-visible.dart';
 import '../models/product.dart';
-import '../scoped-models/products.dart';
+import '../scoped-models/main.dart';
 
 class ProductEditPage extends StatefulWidget {
   @override
@@ -18,7 +18,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
     'title': null,
     'description': null,
     'price': null,
-    'image': 'assets/food.jpg'
+    'image': null
   };
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final _titleFocusNode = FocusNode();
@@ -90,17 +90,24 @@ class _ProductEditPageState extends State<ProductEditPage> {
   }
 
   Widget _buildSubmitButton() {
-    return ScopedModelDescendant<ProductsModel>(
+    return ScopedModelDescendant<MainModel>(
       builder: (
         BuildContext context,
         Widget child,
-        ProductsModel model
+        MainModel model
       ) {
-        return RaisedButton(
+        return model.isLoading
+          ? Center(child: CircularProgressIndicator())
+          : RaisedButton(
           child: Text('Save'),
           color: Theme.of(context).accentColor,
           textColor: Colors.white,
-          onPressed: () => _submitForm(model.addProduct, model.updateProduct, model.selectedProductIndex),
+          onPressed: () => _submitForm(
+            model.addProduct,
+            model.updateProduct,
+            model.selectProduct,
+            model.selectedProductIndex
+          ),
         );
       },
     );
@@ -145,48 +152,73 @@ class _ProductEditPageState extends State<ProductEditPage> {
     );
   }
 
-  void _submitForm(Function addProduct, Function updateProduct, [int selectedProductIndex]) {
+  void _submitForm(
+    Function addProduct,
+    Function updateProduct,
+    Function setSelectedProduct,
+    [int selectedProductIndex]) {
     if (!_formKey.currentState.validate()) {
       return;
     }
     _formKey.currentState.save();
-    if (selectedProductIndex == null) {
+    if (selectedProductIndex == -1) {
       addProduct(
-        Product(
-          title: _formData['title'],
-          description: _formData['description'],
-          price: _formData['price'],
-          image: _formData['image']
-        )
-      );
+        _formData['title'],
+        _formData['description'],
+        _formData['image'],
+        _formData['price'],
+      ).then((bool success) {
+        if (success) {
+          Navigator
+          .pushReplacementNamed(context, '/products')
+          .then((_) => setSelectedProduct(null));
+        } else {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Something went wrong'),
+                content: Text('Please try again.'),
+                actions: <Widget>[
+                  FlatButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text('OK'),
+                  )
+                ],
+              );
+            }
+          );
+        }
+      }
+    );
     } else {
       updateProduct(
-        Product(
-          title: _formData['title'],
-          description: _formData['description'],
-          price: _formData['price'],
-          image: _formData['image']
-        )
-      );
+        _formData['title'],
+        _formData['description'],
+        _formData['image'],
+        _formData['price'],
+      ).then((_) => Navigator
+        .pushReplacementNamed(context, '/products')
+        .then((_) => setSelectedProduct(null)));
     }
-    Navigator.pushReplacementNamed(context, '/products');
   }
 
   @override
   Widget build(BuildContext context) {
-    return ScopedModelDescendant<ProductsModel>(
+    return ScopedModelDescendant<MainModel>(
       builder: (
         BuildContext context,
         Widget child,
-        ProductsModel model
+        MainModel model
       ) {
         final Widget pageContent = _buildPageContent(context, model.selectedProduct);
-        return model.selectedProductIndex == null ?
-        pageContent : Scaffold(
-          appBar: AppBar(
-            title: Text('Edit Product'),
-          ),
-          body: pageContent,
+        return model.selectedProductIndex == -1
+          ? pageContent
+          : Scaffold(
+            appBar: AppBar(
+              title: Text('Edit Product'),
+            ),
+            body: pageContent,
         );
       },
     );
