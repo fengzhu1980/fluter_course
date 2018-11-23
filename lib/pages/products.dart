@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 
 import '../widgets/products/products.dart';
+import '../widgets/ui_elements/logout_list_tile.dart';
 import '../scoped-models/main.dart';
 
 class ProductsPage extends StatefulWidget {
@@ -11,7 +12,6 @@ class ProductsPage extends StatefulWidget {
   ProductsPage(this.model);
   @override
     State<StatefulWidget> createState() {
-      // TODO: implement createState
       return _ProductsPageState();
     }
 }
@@ -36,7 +36,9 @@ class _ProductsPageState extends State<ProductsPage> {
             onTap: () {
               Navigator.popAndPushNamed(context, '/admin');
             },
-          )
+          ),
+          Divider(),
+          LogoutListTile()
         ],
       ),
     );
